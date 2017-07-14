@@ -131,8 +131,8 @@ class Network(object):
         \partial a for the output activations."""
         return (output_activations-y)
 
-    def doRecognize(self, image2dArray):
-        return 1
+    def doRecognize(self, x):
+        return np.argmax(self.feedforward(x))
 
 #### Miscellaneous functions
 def sigmoid(z):
