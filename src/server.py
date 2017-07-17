@@ -8,7 +8,13 @@ from PIL import Image
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("Hello, world")
+        try:
+            name = self.get_argument('name', True)
+            verifyTestData(int(name))
+            self.write(name)
+        # will do some searching
+        except AssertionError:
+            self.write("no params")
 
 class PostImageArray(tornado.web.RequestHandler):
     def set_default_headers(self):
@@ -63,11 +69,31 @@ def make_app():
         (r"/image", PostImageArray),
     ])
 
+def verifyTestData(num):
+    imgDataTest = test_data[num][0]
+    imgDataTest = [x*255 for x in imgDataTest]
+    imgDataTest = np.asarray(imgDataTest)
+    imgDataTest = np.reshape(imgDataTest, (28, 28))
+    imgDataTest = imgDataTest.astype('uint8')
+
+    imgTest = Image.fromarray(imgDataTest, 'L')
+    imgTest.save('test.png')
+
+    data = np.asarray(imgTest)
+    x1 = np.reshape(data, (784, 1))
+    x1 = x1.astype(float)
+    x = [a/255 for a in x1]
+    result = net.doRecognize(np.reshape(x, (784, 1)))
+    print "result is {}, expected result is {}" .format( result, test_data[num][1] )
+
 if __name__ == "__main__":
-    training_data, validation_data, test_data = mnist_loader.load_data_wrapper();
-    # imgTest = Image.fromarray(np.reshape(test_data[0], (28, 28)));
+    training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
+
     net = network.Network([784, 30, 10])
     net.SGD(training_data, 10, 10, 3.0, test_data=test_data)
+
+    verifyTestData(0)
+
     app = make_app()
     app.listen(8888)
     tornado.ioloop.IOLoop.current().start()
