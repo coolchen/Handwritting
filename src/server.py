@@ -30,35 +30,30 @@ class PostImageArray(tornado.web.RequestHandler):
         height = int(self.get_argument('height'))
         img2DArray = []
         imageArray = []
-        rgb_array = np.zeros((height, width, 3), 'uint8')
+        rgb_array = np.zeros((height, width), 'uint8')
         for y in xrange(height):
             new = []
             for x in xrange(width):
                 i = y*width + x
                 ii = str(i*4).decode('utf-8')
-                rgb_array[y, x, 0] = imgJsonMap[str(i*4+3).decode('utf-8')]
-                rgb_array[y, x, 1] = imgJsonMap[str(i*4+3).decode('utf-8')]
-                rgb_array[y, x, 2] = imgJsonMap[str(i*4+3).decode('utf-8')]
-            # img2DArray.append(new)
+                rgb_array[y, x] = imgJsonMap[str(i*4+3).decode('utf-8')]
+                # rgb_array[y, x, 1] = imgJsonMap[str(i*4+3).decode('utf-8')]
+                # rgb_array[y, x, 2] = imgJsonMap[str(i*4+3).decode('utf-8')]
 
-        img = Image.fromarray(rgb_array)
+        img = Image.fromarray(rgb_array, "L")
 
-        # img = Image.new('L', (width, height))
-        # img.putdata(imageArray)
         size = 28, 28
-        # img.thumbnail(size)
+
         img = img.resize(size)
         print img.size
         data = np.asarray(img)
-        x1 = np.reshape(data[:, :, 0], (784, 1))
+        x1 = np.reshape(data, (784, 1))
         x1 = x1.astype(float)
         x = [a/255 for a in x1]
         result = net.doRecognize(np.reshape(x, (784, 1)))
         print "result is %d" % result 
         img.save('my.png')
         # img.show()
-        # img2dArray = np.reshape(imgArray, (width, height))
-        # net.doRecognize(img2dArray)
         self.write(str(result))
         
 
